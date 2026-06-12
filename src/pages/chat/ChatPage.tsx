@@ -106,14 +106,17 @@ export default function ChatPage() {
         setFlow(theFlow);
 
         // 3. Find this visitor's existing conversation, or start a new one.
-        const { data: existing } = await supabase
+        // Use limit(1) (not maybeSingle) so pre-existing duplicates don't throw
+        // and cascade into creating yet more conversations.
+        const { data: existingRows } = await supabase
           .from('conversations')
           .select('*')
           .eq('link_id', link.id)
           .eq('user_id', uid)
           .order('created_at', { ascending: false })
-          .maybeSingle();
+          .limit(1);
 
+        const existing = existingRows?.[0];
         if (existing) {
           setConversation(existing as Conversation);
           return;
