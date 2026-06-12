@@ -279,26 +279,24 @@ export default function Inbox() {
                 placeholder="ex.: Junte-se ao nosso grupo 👇"
               />
             </div>
-            <div className="row" style={{ alignItems: 'flex-start' }}>
-              <div style={{ flex: 1 }}>
-                <label>Texto do botão</label>
-                <input
-                  value={quick.buttonLabel}
-                  onChange={(e) =>
-                    setQuick({ ...quick, buttonLabel: e.target.value })
-                  }
-                />
-              </div>
-              <div style={{ flex: 2 }}>
-                <label>Link do botão</label>
-                <input
-                  value={quick.buttonUrl}
-                  onChange={(e) =>
-                    setQuick({ ...quick, buttonUrl: e.target.value })
-                  }
-                  placeholder="https://…"
-                />
-              </div>
+            <div>
+              <label>Texto do botão</label>
+              <input
+                value={quick.buttonLabel}
+                onChange={(e) =>
+                  setQuick({ ...quick, buttonLabel: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <label>Link do botão</label>
+              <input
+                value={quick.buttonUrl}
+                onChange={(e) =>
+                  setQuick({ ...quick, buttonUrl: e.target.value })
+                }
+                placeholder="https://…"
+              />
             </div>
             <div className="row" style={{ justifyContent: 'flex-end' }}>
               <button
