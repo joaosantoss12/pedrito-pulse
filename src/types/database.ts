@@ -43,6 +43,8 @@ export interface Message {
   type: MessageType;
   content: string | null;
   media_url: string | null;
+  button_label: string | null;
+  button_url: string | null;
   node_id: string | null;
   created_at: string;
 }

@@ -2,9 +2,31 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useMessages } from '../../hooks/useMessages';
+import { useTyping } from '../../hooks/useTyping';
 import MessageList from '../../components/MessageList';
 import { uploadMedia, mediaKind } from '../../lib/media';
 import type { Conversation } from '../../types/database';
+
+// Reusable "quick message with link button" the operator configures once
+// (stored locally) and sends to any chat — e.g. a group invite link.
+interface QuickMsg {
+  text: string;
+  buttonLabel: string;
+  buttonUrl: string;
+}
+const QUICK_KEY = 'inbox-quick-message';
+function loadQuick(): QuickMsg {
+  try {
+    return {
+      text: '',
+      buttonLabel: 'Entrar no grupo',
+      buttonUrl: '',
+      ...JSON.parse(localStorage.getItem(QUICK_KEY) || '{}'),
+    };
+  } catch {
+    return { text: '', buttonLabel: 'Entrar no grupo', buttonUrl: '' };
+  }
+}
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -26,6 +48,27 @@ export default function Inbox() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [messages, setMessages] = useMessages(conversationId ?? null);
+  const { typing, notify } = useTyping(conversationId ?? null, 'admin');
+  const [quick, setQuick] = useState<QuickMsg>(loadQuick);
+  const [quickOpen, setQuickOpen] = useState(false);
+
+  function saveQuick() {
+    localStorage.setItem(QUICK_KEY, JSON.stringify(quick));
+  }
+
+  async function sendQuick() {
+    if (!conversationId) return;
+    await supabase.from('messages').insert({
+      conversation_id: conversationId,
+      sender: 'admin',
+      type: 'text',
+      content: quick.text || null,
+      button_label: quick.buttonUrl ? quick.buttonLabel || 'Abrir' : null,
+      button_url: quick.buttonUrl || null,
+    });
+    saveQuick();
+    setQuickOpen(false);
+  }
 
   async function deleteMessage(id: string) {
     // optimistic removal; realtime DELETE keeps other clients in sync
@@ -163,12 +206,26 @@ export default function Inbox() {
                 🔀 {flowNameOf(active)}
               </span>
             </div>
-            <span className={`badge ${active.status === 'active' ? 'live' : ''}`}>
-              {active.status === 'active' ? 'ativo' : 'concluído'}
-            </span>
+            <div className="row">
+              <button
+                className="ghost"
+                onClick={() => setQuickOpen(true)}
+                title="Enviar mensagem com botão/link (ex.: grupo)"
+              >
+                🔗 Mensagem
+              </button>
+              <span className={`badge ${active.status === 'active' ? 'live' : ''}`}>
+                {active.status === 'active' ? 'ativo' : 'concluído'}
+              </span>
+            </div>
           </div>
 
-          <MessageList messages={messages} showTags onDelete={deleteMessage} />
+          <MessageList
+            messages={messages}
+            showTags
+            onDelete={deleteMessage}
+            typing={typing}
+          />
 
           <form className="composer" onSubmit={onSubmit}>
             <button
@@ -191,7 +248,10 @@ export default function Inbox() {
               type="text"
               placeholder="Mensagem como operador…"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                setInput(e.target.value);
+                notify();
+              }}
             />
             <button className="primary" disabled={busy || !input.trim()}>
               Enviar
@@ -200,6 +260,66 @@ export default function Inbox() {
         </div>
       ) : (
         <div className="empty">Selecione uma conversa</div>
+      )}
+
+      {quickOpen && (
+        <div className="modal-overlay" onClick={() => setQuickOpen(false)}>
+          <div className="modal card col" onClick={(e) => e.stopPropagation()}>
+            <strong>Mensagem com botão</strong>
+            <p className="muted" style={{ margin: 0, fontSize: 13 }}>
+              Configure uma vez; envia para esta conversa. Fica guardada para
+              reutilizar.
+            </p>
+            <div>
+              <label>Mensagem</label>
+              <textarea
+                rows={3}
+                value={quick.text}
+                onChange={(e) => setQuick({ ...quick, text: e.target.value })}
+                placeholder="ex.: Junte-se ao nosso grupo 👇"
+              />
+            </div>
+            <div className="row" style={{ alignItems: 'flex-start' }}>
+              <div style={{ flex: 1 }}>
+                <label>Texto do botão</label>
+                <input
+                  value={quick.buttonLabel}
+                  onChange={(e) =>
+                    setQuick({ ...quick, buttonLabel: e.target.value })
+                  }
+                />
+              </div>
+              <div style={{ flex: 2 }}>
+                <label>Link do botão</label>
+                <input
+                  value={quick.buttonUrl}
+                  onChange={(e) =>
+                    setQuick({ ...quick, buttonUrl: e.target.value })
+                  }
+                  placeholder="https://…"
+                />
+              </div>
+            </div>
+            <div className="row" style={{ justifyContent: 'flex-end' }}>
+              <button
+                className="ghost"
+                onClick={() => {
+                  saveQuick();
+                  setQuickOpen(false);
+                }}
+              >
+                Guardar
+              </button>
+              <button
+                className="primary"
+                onClick={sendQuick}
+                disabled={!quick.text && !quick.buttonUrl}
+              >
+                Enviar para este chat
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

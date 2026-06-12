@@ -34,6 +34,16 @@ function Bubble({ m }: { m: Message }) {
           {linkify(m.content)}
         </div>
       )}
+      {m.button_url && (
+        <a
+          className="bubble-cta"
+          href={m.button_url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {m.button_label || 'Abrir'}
+        </a>
+      )}
     </div>
   );
 }
@@ -44,14 +54,21 @@ interface Props {
   showTags?: boolean;
   // quando fornecido, mostra um botão de eliminar por mensagem (admin)
   onDelete?: (id: string) => void;
+  // remetentes que estão a escrever neste momento (mostra "...")
+  typing?: ('user' | 'bot' | 'admin')[];
 }
 
-export default function MessageList({ messages, showTags, onDelete }: Props) {
+export default function MessageList({
+  messages,
+  showTags,
+  onDelete,
+  typing = [],
+}: Props) {
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length]);
+  }, [messages.length, typing.length]);
 
   return (
     <div className="messages">
@@ -81,6 +98,19 @@ export default function MessageList({ messages, showTags, onDelete }: Props) {
                   🗑
                 </button>
               )}
+            </div>
+          </div>
+        );
+      })}
+
+      {typing.map((sender) => {
+        const cls = !showTags && sender === 'admin' ? 'bot' : sender;
+        return (
+          <div className={`msg ${cls}`} key={`typing-${sender}`}>
+            <div className="bubble typing-bubble">
+              <span></span>
+              <span></span>
+              <span></span>
             </div>
           </div>
         );

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useMessages } from '../../hooks/useMessages';
+import { useTyping } from '../../hooks/useTyping';
 import MessageList from '../../components/MessageList';
 import { uploadMedia, mediaKind } from '../../lib/media';
 import { enablePush, pushStatus } from '../../lib/push';
@@ -29,6 +30,14 @@ export default function ChatPage() {
   const [hintDismissed, setHintDismissed] = useState(false);
 
   const [messages] = useMessages(conversation?.id ?? null);
+  const { typing, notify } = useTyping(conversation?.id ?? null, 'user');
+  const [botTyping, setBotTyping] = useState(false);
+
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  // bot + operator typing dots (operator comes via realtime broadcast)
+  const typingSenders = [
+    ...new Set([...typing, ...(botTyping ? (['bot'] as const) : [])]),
+  ] as ('user' | 'bot' | 'admin')[];
 
   // Auto-request notification permission and subscribe as soon as the chat
   // opens (no button). The browser still shows its native permission prompt —
@@ -123,8 +132,11 @@ export default function ChatPage() {
 
         const conv = created as Conversation;
         setConversation(conv);
+        setBotTyping(true);
+        await sleep(700);
         await startFlow(conv, theFlow);
         await refreshConversation(conv.id);
+        setBotTyping(false);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : 'Não foi possível iniciar o chat',
@@ -158,10 +170,14 @@ export default function ChatPage() {
       await sendVisitorMessage('text', text, null);
       // If the flow is waiting for an answer, resume it (saving the reply).
       if (isWaitingForInput(conversation, flow)) {
+        setBotTyping(true);
+        // pause so the visitor's own message renders before the bot replies
+        await sleep(900);
         await continueAfterInput(conversation, flow, text);
         await refreshConversation(conversation.id);
       }
     } finally {
+      setBotTyping(false);
       setBusy(false);
     }
   }
@@ -171,9 +187,12 @@ export default function ChatPage() {
     setBusy(true);
     try {
       await sendVisitorMessage('text', label, null);
+      setBotTyping(true);
+      await sleep(900);
       await pickChoice(conversation, flow, optionId);
       await refreshConversation(conversation.id);
     } finally {
+      setBotTyping(false);
       setBusy(false);
     }
   }
@@ -192,12 +211,15 @@ export default function ChatPage() {
       );
       // Sending media also resumes a "wait for answer" node (saving the URL).
       if (isWaitingForInput(conversation, flow)) {
+        setBotTyping(true);
+        await sleep(900);
         await continueAfterInput(conversation, flow, url);
         await refreshConversation(conversation.id);
       }
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Falha no carregamento');
     } finally {
+      setBotTyping(false);
       setBusy(false);
       if (fileRef.current) fileRef.current.value = '';
     }
@@ -226,7 +248,7 @@ export default function ChatPage() {
         <span className="badge live">em direto</span>
       </div>
 
-      <MessageList messages={messages} />
+      <MessageList messages={messages} typing={typingSenders} />
 
       {pushHint && !hintDismissed && (
         <div className="push-hint">
@@ -276,7 +298,10 @@ export default function ChatPage() {
           type="text"
           placeholder="Escreva uma mensagem…"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => {
+            setInput(e.target.value);
+            notify();
+          }}
         />
         <button className="primary" disabled={busy || !input.trim()}>
           Enviar

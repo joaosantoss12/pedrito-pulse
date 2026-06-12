@@ -35,9 +35,14 @@ export function useMessages(conversationId: string | null) {
         },
         (payload) => {
           const m = payload.new as Message;
-          setMessages((prev) =>
-            prev.some((x) => x.id === m.id) ? prev : [...prev, m],
-          );
+          setMessages((prev) => {
+            if (prev.some((x) => x.id === m.id)) return prev;
+            // Insert in created_at order — realtime events can arrive out of
+            // order, which otherwise puts a fast bot reply above the user's msg.
+            const next = [...prev, m];
+            next.sort((a, b) => a.created_at.localeCompare(b.created_at));
+            return next;
+          });
         },
       )
       .on(

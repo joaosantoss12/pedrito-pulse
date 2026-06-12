@@ -89,9 +89,14 @@ create table if not exists public.messages (
   type             text not null default 'text',
   content          text,
   media_url        text,
+  button_label     text,
+  button_url       text,
   node_id          text,
   created_at       timestamptz not null default now()
 );
+
+alter table public.messages add column if not exists button_label text;
+alter table public.messages add column if not exists button_url text;
 
 create index if not exists messages_conversation_idx on public.messages(conversation_id, created_at);
 
