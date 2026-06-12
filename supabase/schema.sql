@@ -77,6 +77,9 @@ create table if not exists public.conversations (
 
 create index if not exists conversations_user_idx on public.conversations(user_id);
 create index if not exists conversations_last_msg_idx on public.conversations(last_message_at desc);
+-- One conversation per (link, visitor) — hard guarantee against duplicates.
+create unique index if not exists conversations_link_user_uniq
+  on public.conversations(link_id, user_id) where link_id is not null;
 
 -- ---------------------------------------------------------------------
 -- Messages

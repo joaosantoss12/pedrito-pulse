@@ -131,7 +131,23 @@ export default function ChatPage() {
           })
           .select()
           .single();
-        if (convErr || !created) throw convErr;
+
+        // If a concurrent tab won the race (unique constraint), reuse theirs
+        // instead of creating a second chat — and don't re-run the flow.
+        if (convErr) {
+          const { data: rows } = await supabase
+            .from('conversations')
+            .select('*')
+            .eq('link_id', link.id)
+            .eq('user_id', uid)
+            .order('created_at', { ascending: false })
+            .limit(1);
+          if (rows?.[0]) {
+            setConversation(rows[0] as Conversation);
+            return;
+          }
+          throw convErr;
+        }
 
         const conv = created as Conversation;
         setConversation(conv);
