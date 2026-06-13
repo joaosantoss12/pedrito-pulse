@@ -302,6 +302,7 @@ function Builder() {
           onNodesDelete={onNodesDelete}
           onDrop={onDrop}
           onDragOver={onDragOver}
+          connectionRadius={45}
           onInit={(instance) => {
             instance.fitView();
             // Start ~2 zoom-out clicks further out than fit (1.2 per click).

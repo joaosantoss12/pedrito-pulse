@@ -685,10 +685,30 @@ label {
   stroke: var(--accent);
 }
 .react-flow__handle {
-  width: 9px;
-  height: 9px;
+  width: 15px;
+  height: 15px;
   background: var(--accent);
   border: 2px solid var(--panel);
+  transition: background 0.12s ease, transform 0.12s ease;
+}
+.react-flow__handle:hover {
+  background: var(--accent-3);
+  transform: scale(1.25);
+}
+/* invisible larger grab/drop area so it's easy to start/land a connection */
+.react-flow__handle::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+}
+.react-flow__handle.connectionindicator {
+  cursor: crosshair;
+}
+/* thicker connection line while dragging */
+.react-flow__connection-path {
+  stroke: var(--accent);
+  stroke-width: 3;
 }
 
 /* ---------------- Chat ---------------- */
