@@ -677,37 +677,18 @@ label {
 
 /* React Flow edges + handles */
 .react-flow__edge-path {
-  stroke: #5a6b86;
-  stroke-width: 4;
+  stroke: #3a465c;
+  stroke-width: 2;
 }
 .react-flow__edge.selected .react-flow__edge-path,
 .react-flow__edge:hover .react-flow__edge-path {
   stroke: var(--accent);
 }
 .react-flow__handle {
-  width: 22px;
-  height: 22px;
+  width: 9px;
+  height: 9px;
   background: var(--accent);
-  border: 3px solid var(--panel);
-  transition: background 0.12s ease;
-}
-.react-flow__handle:hover {
-  background: var(--accent-3);
-}
-/* invisible larger grab/drop area so it's easy to start/land a connection */
-.react-flow__handle::after {
-  content: '';
-  position: absolute;
-  inset: -12px;
-  border-radius: 50%;
-}
-.react-flow__handle.connectionindicator {
-  cursor: crosshair;
-}
-/* thicker connection line while dragging */
-.react-flow__connection-path {
-  stroke: var(--accent);
-  stroke-width: 3;
+  border: 2px solid var(--panel);
 }
 
 /* ---------------- Chat ---------------- */
