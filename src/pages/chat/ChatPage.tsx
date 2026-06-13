@@ -105,13 +105,13 @@ export default function ChatPage() {
         }
         setFlow(theFlow);
 
-        // 3. Find this visitor's existing conversation, or start a new one.
-        // Use limit(1) (not maybeSingle) so pre-existing duplicates don't throw
-        // and cascade into creating yet more conversations.
+        // 3. Find this visitor's existing conversation for this FLOW, or start
+        // a new one. Keyed by flow (not link): the same person/device gets one
+        // chat per flow, no matter which of the flow's links they opened.
         const { data: existingRows } = await supabase
           .from('conversations')
           .select('*')
-          .eq('link_id', link.id)
+          .eq('flow_id', theFlow.id)
           .eq('user_id', uid)
           .order('created_at', { ascending: false })
           .limit(1);
@@ -138,7 +138,7 @@ export default function ChatPage() {
           const { data: rows } = await supabase
             .from('conversations')
             .select('*')
-            .eq('link_id', link.id)
+            .eq('flow_id', theFlow.id)
             .eq('user_id', uid)
             .order('created_at', { ascending: false })
             .limit(1);
