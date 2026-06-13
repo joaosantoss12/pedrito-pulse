@@ -14,7 +14,6 @@ interface AuthState {
   isAdmin: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -68,19 +67,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           password,
         });
         if (error) throw error;
-      },
-      async signUp(email, password) {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-        if (error) throw error;
-        // Register the new user as an admin operator.
-        if (data.user) {
-          await supabase
-            .from('profiles')
-            .insert({ id: data.user.id, email });
-        }
       },
       async signOut() {
         await supabase.auth.signOut();

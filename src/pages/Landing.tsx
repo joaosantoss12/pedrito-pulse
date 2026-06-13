@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom';
-
 export default function Landing() {
   return (
     <div className="center">
@@ -8,14 +6,9 @@ export default function Landing() {
           PEDRITO <span>SENDPULSE</span>
         </div>
         <p className="muted">
-          Crie fluxos de conversa visualmente, partilhe um link e fale com os
-          os seus utilizadores em tempo real.
+          Esta página não está disponível. Use o link que lhe foi partilhado
+          para iniciar a conversa.
         </p>
-        <Link to="/admin">
-          <button className="primary" style={{ width: '100%' }}>
-            Abrir administração
-          </button>
-        </Link>
       </div>
     </div>
   );

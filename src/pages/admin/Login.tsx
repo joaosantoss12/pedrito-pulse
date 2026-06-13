@@ -3,9 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function Login() {
-  const { signIn, signUp, session, isAdmin } = useAuth();
+  const { signIn, session, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -20,8 +19,7 @@ export default function Login() {
     setError(null);
     setBusy(true);
     try {
-      if (mode === 'signin') await signIn(email, password);
-      else await signUp(email, password);
+      await signIn(email, password);
       navigate('/admin', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ocorreu um erro');
@@ -37,9 +35,7 @@ export default function Login() {
           PEDRITO <span>SENDPULSE</span>
         </div>
         <p className="muted" style={{ marginTop: -4 }}>
-          {mode === 'signin'
-            ? 'Iniciar sessão de administrador'
-            : 'Criar conta de administrador'}
+          Iniciar sessão de administrador
         </p>
         <div>
           <label>Email</label>
@@ -62,16 +58,7 @@ export default function Login() {
         </div>
         {error && <div style={{ color: 'var(--danger)' }}>{error}</div>}
         <button className="primary" disabled={busy}>
-          {busy ? '…' : mode === 'signin' ? 'Entrar' : 'Registar'}
-        </button>
-        <button
-          type="button"
-          className="ghost"
-          onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
-        >
-          {mode === 'signin'
-            ? 'Não tem conta? Registe-se'
-            : 'Já tem conta? Inicie sessão'}
+          {busy ? '…' : 'Entrar'}
         </button>
       </form>
     </div>

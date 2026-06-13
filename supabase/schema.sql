@@ -165,15 +165,10 @@ drop policy if exists profiles_select on public.profiles;
 create policy profiles_select on public.profiles
   for select using (id = auth.uid() or public.is_admin());
 
--- A non-anonymous (email) user can self-register as an admin operator.
--- Anonymous visitors are blocked, so they can never self-promote.
--- NOTE: for a real product, gate this further (invite-only / allowlist).
+-- Self-registration is disabled. Admins are created manually (Supabase
+-- dashboard / SQL): create the auth user, then insert a row into profiles.
+-- (No insert policy here, so no one can self-promote to admin.)
 drop policy if exists profiles_insert_self on public.profiles;
-create policy profiles_insert_self on public.profiles
-  for insert with check (
-    id = auth.uid()
-    and coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false) = false
-  );
 
 -- flows: admins manage everything; anyone signed in can read PUBLISHED flows
 -- (visitors need this to run the flow).
